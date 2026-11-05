@@ -1,0 +1,124 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Home page: full-screen sky, no footer */
+  bare?: boolean;
+}
+const { title, description = 'Julian Karcher: Research Master’s student in Psychology at the University of Amsterdam. Brain and cognition, methods and statistics, open science.', bare = false } = Astro.props;
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const nav = [
+  { href: '/', label: 'Home' },
+  { href: '/about/', label: 'About' },
+  { href: '/research/', label: 'Research' },
+  { href: '/photography/', label: 'Photography' },
+  { href: '/cookbook/', label: 'Cookbook' },
+  { href: '/contact/', label: 'Contact' },
+];
+const path = Astro.url.pathname.replace(base, '') || '/';
+const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+const pageTitle = title === 'Home' ? 'Julian Karcher' : `${title} | Julian Karcher`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#07090f" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+    <title>{pageTitle}</title>
+  </head>
+  <body class:list={{ bare }}>
+    {!bare && <div class="sky" aria-hidden="true"></div>}
+    <a class="skip" href="#content">Skip to content</a>
+    <header class="site-header" data-header>
+      <div class="bar">
+        <a class="brand" href={`${base}/`}>Julian Karcher</a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-menu-toggle>
+          <span class="sr-only">Menu</span>
+          <span class="bars" aria-hidden="true"><i></i><i></i></span>
+        </button>
+        <nav id="site-nav" aria-label="Main" data-nav>
+          {nav.map((item) => (
+            <a href={`${base}${item.href}`} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+          ))}
+        </nav>
+      </div>
+    </header>
+    <main id="content">
+      <slot />
+    </main>
+    {!bare && (
+      <footer class="site-footer">
+        <div class="wrap foot">
+          <span>Julian Karcher</span>
+          <nav aria-label="Footer">
+            <a href="https://github.com/Junex161" rel="me">GitHub</a>
+            <a href="https://osf.io/a9tvh/" rel="me">OSF</a>
+            <a href={`${base}/contact/`}>Contact</a>
+          </nav>
+        </div>
+      </footer>
+    )}
+
+    <script>
+      const header = document.querySelector<HTMLElement>('[data-header]');
+      const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+      const onScroll = () => header?.classList.toggle('scrolled', window.scrollY > 8);
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+      toggle?.addEventListener('click', () => {
+        const open = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', String(open));
+        header?.classList.toggle('open', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+      });
+    </script>
+
+    <style>
+      .skip { position: absolute; left: 12px; top: -48px; z-index: 100; background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 4px; font-size: .9rem; }
+      .skip:focus { top: 12px; }
+
+      .site-header { position: sticky; top: 0; z-index: 50; padding-top: env(safe-area-inset-top, 0px); border-bottom: 1px solid transparent; transition: background .3s, border-color .3s; }
+      .site-header.scrolled, .site-header.open { background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-color: var(--line); }
+      .bare .site-header { position: fixed; left: 0; right: 0; background: none; border-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+      .bare .site-header.open { background: var(--bg); }
+
+      .bar { max-width: var(--wrap); margin-inline: auto; height: var(--header-h); display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-left: var(--gutter); padding-right: var(--gutter-r); }
+      .brand { text-decoration: none; font-weight: 650; font-stretch: 125%; font-size: 1.02rem; letter-spacing: 0.01em; }
+
+      #site-nav { display: flex; gap: 28px; }
+      #site-nav a { position: relative; text-decoration: none; font-size: .95rem; color: var(--ink-2); padding: 6px 0; transition: color .2s; }
+      #site-nav a:hover { color: var(--ink); }
+      #site-nav a[aria-current='page'] { color: var(--ink); }
+      #site-nav a[aria-current='page']::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--star); }
+
+      .menu-toggle { display: none; }
+
+      @media (max-width: 800px) {
+        .menu-toggle { display: grid; place-items: center; width: 44px; height: 44px; margin-right: -10px; background: none; border: 0; color: var(--ink); cursor: pointer; }
+        .bars { display: grid; gap: 6px; width: 22px; }
+        .bars i { display: block; height: 1.5px; background: currentColor; transition: transform .3s; }
+        .open .bars i:first-child { transform: translateY(3.75px) rotate(45deg); }
+        .open .bars i:last-child { transform: translateY(-3.75px) rotate(-45deg); }
+        #site-nav { position: fixed; inset: calc(var(--header-h) + env(safe-area-inset-top, 0px)) 0 0 0; flex-direction: column; gap: 0; padding: 16px var(--gutter-r) 40px var(--gutter); background: var(--bg); opacity: 0; pointer-events: none; transition: opacity .2s; }
+        .open #site-nav { opacity: 1; pointer-events: auto; }
+        #site-nav a { font-size: 1.6rem; font-weight: 600; font-stretch: 115%; color: var(--ink); padding: 14px 0; border-bottom: 1px solid var(--line); }
+        #site-nav a[aria-current='page'] { color: var(--star); }
+        #site-nav a[aria-current='page']::after { display: none; }
+      }
+
+      .site-footer { margin-top: 112px; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px; padding-block: 28px 36px; font-size: .9rem; color: var(--ink-3); }
+      .foot nav { display: flex; gap: 24px; }
+      .foot nav a { text-decoration: none; color: var(--ink-2); }
+      .foot nav a:hover { color: var(--ink); }
+    </style>
+  </body>
+</html>

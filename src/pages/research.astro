@@ -1,0 +1,81 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const cv = (await getCollection('cv')).map((e) => ({ id: e.id, ...e.data }));
+const pick = (id: string) => cv.find((e) => e.id === id)!;
+
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fmt = (ym?: string) => (ym ? `${months[Number(ym.split('-')[1]) - 1]} ${ym.split('-')[0]}` : '');
+const range = (e: { start?: string; end?: string }) => `${fmt(e.start)} – ${e.end ? fmt(e.end) : 'present'}`;
+
+/* Edit freely: one entry per topic. */
+const interests = [
+  { title: 'Consciousness', text: 'What consciousness is, how it relates to the brain, and how it can be studied empirically.' },
+  { title: 'Psychedelic science', text: 'Psychedelics as a tool to study consciousness and as a possible treatment. I coordinated a uniMIND group of the MIND Foundation with a journal club and course on the topic.' },
+  { title: 'Open science', text: 'Preregistration, open data and materials, replication. I coordinate the Open Science working group of PsyFaKo.' },
+];
+
+const experience = [pick('ude-personality'), pick('hohenheim'), pick('ude-tutor')];
+---
+<Base title="Research" description="Research interests and experience of Julian Karcher, Research Master student in psychology at the University of Amsterdam.">
+  <header class="page-head wrap">
+    <h1>Research</h1>
+    <p class="intro">I’m a Research Master student in Psychology at the University of Amsterdam, majoring in Brain and Cognition with a minor in Methods and Statistics.</p>
+  </header>
+
+  <div class="wrap">
+    <section class="section" aria-label="Interests">
+      <h2>Interests</h2>
+      <dl class="interests">
+        {interests.map((it) => (
+          <div><dt>{it.title}</dt><dd>{it.text}</dd></div>
+        ))}
+      </dl>
+    </section>
+
+    <section class="section" aria-label="Experience">
+      <h2>Experience</h2>
+      <ol class="exp">
+        {experience.map((e) => (
+          <li>
+            <div>
+              <h3>{e.title}</h3>
+              <p class="org">{e.org}{e.place && `, ${e.place}`}</p>
+              {e.detail && <p class="muted">{e.detail}</p>}
+            </div>
+            <p class="when num">{range(e)}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="section" aria-label="Open science">
+      <h2>Open science</h2>
+      <div class="prose os">
+        <p>Since June 2025 I coordinate the Open Science working group of PsyFaKo e.V., the national conference of psychology student councils in Germany.</p>
+        <p>Projects and materials are on my <a href="https://osf.io/a9tvh/" rel="noopener">OSF profile</a>. My bachelor’s thesis is available on <a href="https://osf.io/eyrfb/" rel="noopener">OSF</a> as well.</p>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .interests { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 40px; }
+  .interests dt { font-weight: 600; font-stretch: 108%; font-size: 1.08rem; }
+  .interests dd { margin: 6px 0 0; color: var(--ink-2); }
+
+  .exp { list-style: none; margin: 0; padding: 0; display: grid; gap: 26px; }
+  .exp li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; }
+  .exp h3 { font-size: 1.12rem; font-stretch: 108%; }
+  .exp .org { margin-top: 4px; color: var(--ink-2); }
+  .exp .muted { margin-top: 4px; font-size: .97rem; }
+  .when { color: var(--ink-3); font-size: .93rem; white-space: nowrap; }
+  .os { max-width: 62ch; color: var(--ink-2); }
+
+  @media (max-width: 700px) {
+    .interests { grid-template-columns: 1fr; }
+    .exp li { grid-template-columns: 1fr; gap: 4px; }
+    .when { order: -1; }
+  }
+</style>

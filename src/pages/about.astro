@@ -1,0 +1,112 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const logos = import.meta.glob<{ default: ImageMetadata }>('../assets/logos/*', { eager: true });
+const logoSrc = (name?: string) => (name ? logos[`../assets/logos/${name}`]?.default.src : undefined);
+
+const all = (await getCollection('cv')).map((e) => e.data).filter((e) => !e.hidden);
+const byStart = (a: { start?: string }, b: { start?: string }) => (b.start ?? '').localeCompare(a.start ?? '');
+const sections = [
+  { title: 'Education', items: all.filter((e) => e.section === 'education').sort(byStart) },
+  { title: 'Employment', items: all.filter((e) => e.section === 'employment').sort(byStart) },
+  { title: 'Engagement', items: all.filter((e) => e.section === 'engagement').sort(byStart) },
+];
+const memberships = all.filter((e) => e.section === 'membership');
+
+const languages = [
+  { name: 'German', level: 'Native' },
+  { name: 'English', level: 'C2' },
+  { name: 'Spanish', level: 'B2' },
+];
+
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fmt = (ym?: string) => (ym ? `${months[Number(ym.split('-')[1]) - 1]} ${ym.split('-')[0]}` : '');
+const range = (e: { start?: string; end?: string }) => (e.start ? `${fmt(e.start)} – ${e.end ? fmt(e.end) : 'present'}` : '');
+const host = (url: string) => new URL(url).hostname.replace(/^www\./, '');
+---
+<Base title="About" description="Background, education and work experience of Julian Karcher.">
+  <header class="page-head wrap">
+    <h1>About</h1>
+    <div class="intro prose">
+      <p>I’m Julian. I study psychology at the University of Amsterdam, in the Research Master with a major in Brain and Cognition and a minor in Methods and Statistics. Before that I did my bachelor’s at the University of Duisburg-Essen, and before that I spent a year studying philosophy and German in Heidelberg.</p>
+      <p>Outside of university I take photos, cook, travel, and play basketball and jugger.</p>
+    </div>
+  </header>
+
+  <div class="wrap">
+    {sections.map((s) => (
+      <section class="section" aria-label={s.title}>
+        <h2>{s.title}</h2>
+        <ol class="entries">
+          {s.items.map((e) => (
+            <li class="entry">
+              <span class:list={['logo', e.logoBg]}>
+                {logoSrc(e.logo) ? <img src={logoSrc(e.logo)} alt="" loading="lazy" /> : <span class="none" aria-hidden="true"></span>}
+              </span>
+              <div class="what">
+                <h3>{e.title}</h3>
+                <p class="org">{e.org}{e.place && `, ${e.place}`}</p>
+                {e.detail && <p class="detail">{e.detail}</p>}
+              </div>
+              <p class="when num">{range(e)}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))}
+
+    <section class="section" aria-label="Memberships">
+      <h2>Memberships</h2>
+      <ul class="entries">
+        {memberships.map((m) => (
+          <li class="entry">
+            <span class:list={['logo', m.logoBg]}>{logoSrc(m.logo) && <img src={logoSrc(m.logo)} alt="" loading="lazy" />}</span>
+            <div class="what">
+              <h3>{m.org}</h3>
+              <p class="org">{m.title}</p>
+            </div>
+            {m.url && <a class="when site" href={m.url} rel="noopener">{host(m.url)}<span aria-hidden="true"> ↗</span></a>}
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section" aria-label="Languages">
+      <h2>Languages</h2>
+      <dl class="langs">
+        {languages.map((l) => (
+          <div><dt>{l.name}</dt><dd>{l.level}</dd></div>
+        ))}
+      </dl>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .entries { list-style: none; margin: 0; padding: 0; display: grid; gap: 30px; }
+  .entry { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; gap: 24px; align-items: start; }
+  .logo { display: block; width: 112px; height: 60px; padding: 8px 10px; border-radius: 6px; background: #f4f5f7; }
+  .logo { overflow: hidden; }
+  .logo img { width: 100%; height: 100%; object-fit: contain; }
+  .logo.dark { background: #2c4a3a; }
+  .logo:has(.none) { background: var(--bg-2); }
+  .what h3 { font-size: 1.15rem; font-stretch: 108%; font-weight: 600; }
+  .org { margin-top: 4px; color: var(--ink-2); }
+  .detail { margin-top: 6px; color: var(--ink-3); font-size: .97rem; max-width: 58ch; }
+  .when { color: var(--ink-3); font-size: .93rem; white-space: nowrap; padding-top: 2px; }
+  a.site { text-decoration: none; color: var(--ink-2); border-bottom: 1px solid var(--line-2); padding-bottom: 1px; transition: color .2s, border-color .2s; }
+  a.site:hover { color: var(--ink); border-color: var(--ink-2); }
+
+  .langs { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 180px)); gap: 24px; }
+  .langs dt { font-weight: 600; font-stretch: 108%; }
+  .langs dd { margin: 2px 0 0; color: var(--ink-2); }
+
+  @media (max-width: 700px) {
+    .entry { grid-template-columns: 76px minmax(0, 1fr); gap: 16px; }
+    .logo { width: 76px; height: 44px; padding: 6px; }
+    .when { grid-column: 2; margin-top: -8px; }
+    .entry .when { order: 3; }
+    .langs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+</style>

@@ -1,0 +1,54 @@
+---
+import Base from '../../layouts/Base.astro';
+import RecipeBook from '../../components/book/RecipeBook.vue';
+import { getCollection } from 'astro:content';
+import type { Recipe, RecipeText } from '../../components/book/types';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+/* Each recipe is a folder with en.md and de.md, e.g. "spaetzle/en" */
+const entries = await getCollection('recipes', (e) => !e.data.draft);
+const bySlug = new Map<string, { en?: (typeof entries)[number]; de?: (typeof entries)[number] }>();
+for (const e of entries) {
+  const [slug, lang] = e.id.split('/');
+  const slot = bySlug.get(slug) ?? {};
+  slot[lang as 'en' | 'de'] = e;
+  bySlug.set(slug, slot);
+}
+
+const toText = (e: (typeof entries)[number]): RecipeText => ({
+  title: e.data.title,
+  description: e.data.description,
+  servings: e.data.servings,
+  time: e.data.time,
+  ingredients: e.data.ingredients,
+  tip: e.data.tip,
+  html: e.rendered?.html ?? '',
+});
+
+const recipes: Recipe[] = [...bySlug.entries()]
+  .filter(([, v]) => v.en || v.de)
+  .map(([slug, v]) => {
+    const en = v.en ?? v.de!; // fall back to the other language if one file is missing
+    const de = v.de ?? v.en!;
+    return { slug, category: en.data.category, order: en.data.order, en: toText(en), de: toText(de) };
+  })
+  .sort((a, b) => a.order - b.order)
+  .map(({ order, ...r }) => r);
+---
+<Base title="My Vegan Cookbook" description="Vegan recipes from my kitchen, in English and German.">
+  <header class="page-head wrap">
+    <h1>Cookbook</h1>
+    <p class="intro">Vegan comfort food from my kitchen, in English and German. Pick a recipe from the contents or just turn the pages.</p>
+  </header>
+
+  <section class="wrap book-wrap">
+    <RecipeBook client:load recipes={recipes} contactHref={`${base}/contact/`} />
+    <noscript><p class="muted">The cookbook needs JavaScript to turn its pages.</p></noscript>
+  </section>
+</Base>
+
+<style>
+  .book-wrap { padding-bottom: clamp(64px, 10vw, 120px); }
+  .page-head { padding-bottom: clamp(24px, 3vw, 36px); }
+</style>

@@ -1,0 +1,126 @@
+---
+import Base from '../layouts/Base.astro';
+import EmailLink from '../components/EmailLink.vue';
+import { FORM_ENDPOINT, EMAIL } from '../data/site';
+---
+<Base title="Contact" description="How to reach Julian Karcher.">
+  <header class="page-head wrap">
+    <h1>Contact</h1>
+    <p class="intro">Questions about research, a recipe or a photo? Send me a message.</p>
+  </header>
+
+  <div class="wrap contact">
+    <form class="form" data-form data-endpoint={FORM_ENDPOINT} data-user={EMAIL.user} data-domain={EMAIL.domain} novalidate>
+      <div class="row two">
+        <label>
+          <span>Name</span>
+          <input name="name" type="text" autocomplete="name" required />
+        </label>
+        <label>
+          <span>Email</span>
+          <input name="email" type="email" autocomplete="email" required />
+        </label>
+      </div>
+      <label class="row">
+        <span>Message</span>
+        <textarea name="message" rows="7" required></textarea>
+      </label>
+      <!-- spam trap, hidden from people -->
+      <label class="trap" aria-hidden="true">Leave empty <input name="_gotcha" type="text" tabindex="-1" autocomplete="off" /></label>
+      <div class="actions">
+        <button class="btn solid" type="submit" data-submit>Send message</button>
+        <p class="status" data-status role="status"></p>
+      </div>
+    </form>
+
+    <aside class="direct">
+      <h2>Elsewhere</h2>
+      <dl>
+        <div><dt>Email</dt><dd><EmailLink client:load user={EMAIL.user} domain={EMAIL.domain} /></dd></div>
+        <div><dt>GitHub</dt><dd><a class="link" href="https://github.com/Junex161" rel="me noopener">Junex161</a></dd></div>
+        <div><dt>OSF</dt><dd><a class="link" href="https://osf.io/a9tvh/" rel="me noopener">osf.io/a9tvh</a></dd></div>
+        <div><dt>Based in</dt><dd>Amsterdam</dd></div>
+      </dl>
+    </aside>
+  </div>
+</Base>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-form]')!;
+  const status = form.querySelector<HTMLElement>('[data-status]')!;
+  const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
+    if (data.get('_gotcha')) return;
+    const name = String(data.get('name') || '').trim();
+    const email = String(data.get('email') || '').trim();
+    const message = String(data.get('message') || '').trim();
+
+    form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+    const bad = [!name && 'name', !/^\S+@\S+\.\S+$/.test(email) && 'email', !message && 'message'].filter(Boolean) as string[];
+    if (bad.length) {
+      bad.forEach((n) => form.querySelector(`[name="${n}"]`)?.setAttribute('aria-invalid', 'true'));
+      status.textContent = 'Please fill in your name, a valid email address and a message.';
+      (form.querySelector(`[name="${bad[0]}"]`) as HTMLElement | null)?.focus();
+      return;
+    }
+
+    const endpoint = form.dataset.endpoint;
+    if (!endpoint) {
+      // No form service configured: open the visitor's email app with everything filled in.
+      const to = `${form.dataset.user}@${form.dataset.domain}`;
+      const body = `${message}\n\n${name}\n${email}`;
+      location.href = `mailto:${to}?subject=${encodeURIComponent(`Message from ${name}`)}&body=${encodeURIComponent(body)}`;
+      status.textContent = 'Your email app should open with the message. Just press send there.';
+      return;
+    }
+
+    submit.disabled = true;
+    status.textContent = 'Sending…';
+    try {
+      const res = await fetch(endpoint, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error(String(res.status));
+      form.reset();
+      status.textContent = 'Thanks, your message has been sent.';
+    } catch {
+      status.textContent = 'That didn’t work. Please try again or write me an email directly.';
+    } finally {
+      submit.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .contact { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: clamp(40px, 7vw, 96px); align-items: start; }
+  .form { display: grid; gap: 26px; }
+  .row.two { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+  label { display: grid; gap: 8px; }
+  label > span { font-size: .9rem; color: var(--ink-2); }
+  input, textarea {
+    width: 100%; font: inherit; color: var(--ink); background: var(--bg-1);
+    border: 1px solid var(--line-2); border-radius: 4px; padding: 13px 14px;
+    transition: border-color .2s, background .2s;
+  }
+  textarea { resize: vertical; min-height: 170px; line-height: 1.55; }
+  input:hover, textarea:hover { border-color: #3a4660; }
+  input:focus, textarea:focus { outline: none; border-color: var(--ink-2); background: var(--bg-2); }
+  [aria-invalid='true'] { border-color: #d9826b; }
+  .trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .status { color: var(--ink-2); font-size: .95rem; }
+
+  .direct { border-top: 1px solid var(--line); padding-top: 22px; }
+  .direct h2 { font-size: 1.05rem; margin-bottom: 18px; }
+  .direct dl { margin: 0; display: grid; gap: 16px; }
+  .direct dt { font-size: .88rem; color: var(--ink-3); }
+  .direct dd { margin: 2px 0 0; }
+  .direct dd :global(a) { text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+  .direct dd :global(a:hover) { text-decoration-color: currentColor; }
+
+  @media (max-width: 800px) {
+    .contact { grid-template-columns: 1fr; }
+    .row.two { grid-template-columns: 1fr; }
+  }
+</style>

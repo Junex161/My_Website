@@ -1,0 +1,14 @@
+[
+  { "id": "uva-rm", "start": "2026-08", "kind": "education", "title": "Research Master in Psychology", "place": "University of Amsterdam", "detail": "Major: Brain and Cognition · Minor: Methods and Statistics" },
+  { "id": "hohenheim", "start": "2026-07", "end": "2026-08", "kind": "work", "title": "Student Research Assistant", "place": "University of Hohenheim, Stuttgart", "detail": "Environmental psychology project with IPU e.V." },
+  { "id": "psyfako-os", "start": "2025-06", "kind": "engagement", "title": "Coordinator, Open Science Working Group", "place": "PsyFaKo e.V.", "detail": "Germany-wide psychology student organization" },
+  { "id": "ude-personality", "start": "2024-09", "end": "2026-08", "kind": "work", "title": "Student Research Assistant", "place": "Chair of Personality Psychology and Individual Differences, University of Duisburg-Essen", "detail": "Assisting research" },
+  { "id": "unimind", "start": "2024-07", "kind": "engagement", "title": "Coordinator, uniMIND Group", "place": "MIND Foundation", "detail": "Journal club and course on psychedelic science", "note": "End date to confirm" },
+  { "id": "ude-committees", "start": "2024-07", "kind": "engagement", "title": "Student Council & Faculty Council", "place": "University of Duisburg-Essen", "detail": "Member of the Psychology Student Council, deputy member of the Faculty Council", "note": "End date to confirm" },
+  { "id": "ude-tutor", "start": "2024-06", "end": "2026-08", "kind": "work", "title": "Statistics Tutor", "place": "Chair of Psychological Assessment and Methods, University of Duisburg-Essen", "detail": "Tutoring first- and second-semester students in statistics" },
+  { "id": "internship", "start": "2024-02", "end": "2024-03", "kind": "work", "title": "Internship, Child & Adolescent Psychotherapy", "place": "Psychotherapeutic practice, Essen", "detail": "Psychological diagnostics" },
+  { "id": "ude-bsc", "start": "2023-09", "end": "2026-08", "kind": "education", "title": "BSc Psychology", "place": "University of Duisburg-Essen" },
+  { "id": "hd-workshop", "start": "2023-02", "end": "2023-03", "kind": "work", "title": "Student Assistant", "place": "Heidelberg University", "detail": "Workshop “Anthropological Dimensions of Transcendental Philosophy”" },
+  { "id": "hd-studies", "start": "2022-10", "end": "2023-08", "kind": "education", "title": "Philosophy & German Studies", "place": "Heidelberg University", "note": "Include? Julian to decide" },
+  { "id": "studienstiftung", "start": "2024-01", "kind": "award", "title": "Scholar", "place": "German Academic Scholarship Foundation (Studienstiftung)", "note": "Start date to confirm" }
+]

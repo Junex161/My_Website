@@ -1,0 +1,17 @@
+{
+  "name": "julian-karcher-website",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/vue": "7.1.2",
+    "@fontsource-variable/archivo": "5.3.0",
+    "astro": "7.4.2",
+    "vue": "3.5.44"
+  }
+}

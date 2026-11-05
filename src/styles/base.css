@@ -1,0 +1,14 @@
+/* Placeholder styles only. The real design comes once the visual direction is settled. */
+:root { --bg: #fff; --fg: #111; --muted: #666; --line: #ddd; }
+@media (prefers-color-scheme: dark) { :root { --bg: #111; --fg: #eee; --muted: #999; --line: #333; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, sans-serif; }
+a { color: inherit; }
+.site-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding: 16px max(16px, 4vw); border-bottom: 1px solid var(--line); }
+.site-header nav { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.site-header nav a { text-decoration: none; }
+.site-header nav a[aria-current='page'] { text-decoration: underline; }
+.site-name { font-weight: 700; text-decoration: none; }
+main { max-width: 860px; margin: 0 auto; padding: 32px max(16px, 4vw) 64px; }
+.site-footer { padding: 24px max(16px, 4vw); color: var(--muted); border-top: 1px solid var(--line); }
+.muted { color: var(--muted); }

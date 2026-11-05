@@ -1,0 +1,124 @@
+---
+import Base from '../layouts/Base.astro';
+import { Image, getImage } from 'astro:assets';
+import { sections } from '../data/photos';
+
+const all = sections.flatMap((s) => s.photos);
+const large = await Promise.all(
+  all.map((p) => getImage({ src: p.src, width: Math.min(2400, p.src.width), format: 'webp', quality: 85 })),
+);
+let n = 0;
+const indexed = sections.map((s) => ({ ...s, photos: s.photos.map((p) => ({ ...p, i: n++ })) }));
+---
+<Base title="Photography" description="Photography by Julian Karcher.">
+  <header class="page-head wrap">
+    <h1>Photography</h1>
+  </header>
+
+  <div class="wrap">
+    {indexed.map((s) => (
+      <section class="gallery-section" id={s.id} aria-labelledby={`${s.id}-h`}>
+        <div class="sec-head">
+          <h2 id={`${s.id}-h`}>{s.title}</h2>
+          {s.intro && <p class="muted">{s.intro}</p>}
+        </div>
+        <ul class="grid">
+          {s.photos.map((p) => (
+            <li>
+              <button type="button" class="frame" data-index={p.i} aria-label={`Open ${p.title} full size`}>
+                <Image src={p.src} alt={p.alt} widths={[480, 800, 1200]} sizes="(min-width: 900px) 540px, 100vw" quality={80} />
+              </button>
+              <p class="cap"><span class="no num">{String(p.i + 1).padStart(2, '0')}</span>{p.title}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+
+  <dialog class="lightbox" data-lightbox aria-label="Photo viewer">
+    <figure>
+      <img data-lb-img alt="" />
+      <figcaption><span data-lb-title></span><span class="muted num" data-lb-count></span></figcaption>
+    </figure>
+    <button type="button" class="lb-btn lb-close" data-lb-close aria-label="Close">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+    </button>
+    <button type="button" class="lb-btn lb-prev" data-lb-prev aria-label="Previous photo">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+    </button>
+    <button type="button" class="lb-btn lb-next" data-lb-next aria-label="Next photo">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+    </button>
+  </dialog>
+
+  <script is:inline type="application/json" id="photo-data" set:html={JSON.stringify(all.map((p, i) => ({ src: large[i].src, title: p.title, alt: p.alt })))}></script>
+
+  <script>
+    type P = { src: string; title: string; alt: string };
+    const data: P[] = JSON.parse(document.getElementById('photo-data')!.textContent || '[]');
+    const dlg = document.querySelector<HTMLDialogElement>('[data-lightbox]')!;
+    const img = dlg.querySelector<HTMLImageElement>('[data-lb-img]')!;
+    const title = dlg.querySelector<HTMLElement>('[data-lb-title]')!;
+    const count = dlg.querySelector<HTMLElement>('[data-lb-count]')!;
+    let idx = 0;
+    const show = (i: number) => {
+      idx = (i + data.length) % data.length;
+      const p = data[idx];
+      img.classList.remove('in');
+      img.src = p.src; img.alt = p.alt;
+      img.onload = () => img.classList.add('in');
+      title.textContent = p.title;
+      count.textContent = `${idx + 1} of ${data.length}`;
+    };
+    document.querySelectorAll<HTMLButtonElement>('.frame').forEach((b) =>
+      b.addEventListener('click', () => { show(Number(b.dataset.index)); dlg.showModal(); }),
+    );
+    dlg.querySelector('[data-lb-close]')!.addEventListener('click', () => dlg.close());
+    dlg.querySelector('[data-lb-prev]')!.addEventListener('click', () => show(idx - 1));
+    dlg.querySelector('[data-lb-next]')!.addEventListener('click', () => show(idx + 1));
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') show(idx + 1);
+      if (e.key === 'ArrowLeft') show(idx - 1);
+    });
+    let sx = 0;
+    dlg.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+    dlg.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 50) show(idx + (dx < 0 ? 1 : -1));
+    });
+  </script>
+
+  <style>
+    .gallery-section { border-top: 1px solid var(--line); padding-top: 32px; }
+    .gallery-section + .gallery-section { margin-top: 72px; }
+    .sec-head { margin-bottom: 28px; }
+    .sec-head p { margin-top: 8px; font-size: 1.1rem; }
+    .sec-head h2 { font-size: 1.35rem; }
+    .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 28px; }
+    .frame { display: block; width: 100%; padding: 0; border: 0; background: #000; cursor: zoom-in; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 2px; }
+    .frame :global(img) { width: 100%; height: 100%; object-fit: cover; transition: opacity .3s; }
+    .frame:hover :global(img) { opacity: .88; }
+    .cap { margin-top: 12px; font-size: .95rem; color: var(--ink-2); display: flex; gap: 14px; align-items: baseline; }
+    .cap .no { color: var(--ink-3); font-size: .85rem; font-variant-numeric: tabular-nums; }
+
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; gap: 32px; }
+    }
+
+    .lightbox { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: rgb(4 6 10 / 0.97); color: var(--ink); }
+    .lightbox::backdrop { background: rgb(0 0 0 / 0.7); }
+    .lightbox figure { margin: 0; height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; align-items: center; justify-items: center; padding: calc(60px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); gap: 14px; }
+    .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; opacity: 0; transition: opacity .4s; }
+    .lightbox img.in { opacity: 1; }
+    .lightbox figcaption { display: flex; gap: 16px; align-items: baseline; font-size: .95rem; }
+    .lb-btn { position: absolute; display: grid; place-items: center; width: 44px; height: 44px; border: 0; background: none; color: var(--ink-2); cursor: pointer; transition: color .2s; }
+    .lb-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .lb-btn:hover { color: #fff; }
+    .lb-close { top: calc(10px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); }
+    .lb-prev { left: max(12px, env(safe-area-inset-left, 0px)); top: 50%; transform: translateY(-50%); }
+    .lb-next { right: max(12px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); }
+    @media (max-width: 700px) { .lb-prev, .lb-next { top: auto; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); transform: none; } }
+  </style>
+</Base>

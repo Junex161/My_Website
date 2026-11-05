@@ -1,0 +1,11 @@
+---
+/* Old recipe addresses (/cookbook/spaetzle/) now forward to the page in the book (/cookbook/#spaetzle). */
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const slugs = new Set((await getCollection('recipes')).map((e) => e.id.split('/')[0]));
+  return [...slugs].map((id) => ({ params: { id } }));
+}
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+return Astro.redirect(`${base}/cookbook/#${Astro.params.id}`);
+---
